@@ -1,3 +1,4 @@
+#THIS IS A DEMO IN REAL WORLD ADD THIS TO .gitignore 
 aws_profile = "default"
 aws_region  = "us-west-2"
 vpc_cidr    = "10.0.0.0/16"
@@ -11,4 +12,10 @@ cidrs = {
   rds3     = "10.0.7.0/24"
 }
 code_bucket_name = "brylex"
+db_instance_class = "db.m5.large"
+dbname = "test" 
+dbpassword = "testing123testing123"
+dbuser = "admin"
+
+
 
