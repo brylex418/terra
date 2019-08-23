@@ -17,6 +17,8 @@ dbname = "test"
 dbpassword = "testing123testing123"
 dbuser = "admin"
 db_engine_version = "5.7.22"
-
-
-
+dev_instance_type = "m5.large"
+dev_ami = "ami-06f2f779464715dc5"
+public_key_path = "~/.ssh/id_rsa.pub"
+key_name = "brylex-tf"
+domain_name = "abryant.io"
