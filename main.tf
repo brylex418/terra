@@ -305,12 +305,16 @@ POLICY
 #--------------S3 Bucket-----------------
 
 
-resource "random_id" "wp_code_bucket" {
-  byte_length = 3
+resource "random_string" "wp_code_bucket" {
+  length = 10
+  special = false
+  upper = false
+  number = false
+  
 }
 
 resource "aws_s3_bucket" "code" {
-  bucket        = "${var.code_bucket_name}-${random_id.wp_code_bucket.id}"
+  bucket        = "${var.code_bucket_name}-${random_string.wp_code_bucket.id}"
   acl           = "private"
   force_destroy = true
 }
@@ -325,7 +329,7 @@ resource "aws_s3_account_public_access_block" "example" {
 resource "aws_db_instance" "wp_db" {
   allocated_storage = 200
   engine = "mysql"
-  engine_version = "5.6.27"
+  engine_version = "${var.db_engine_version}"
   instance_class = "${var.db_instance_class}"
   name = "${var.dbname}"
   username = "${var.dbuser}"

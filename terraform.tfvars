@@ -16,6 +16,7 @@ db_instance_class = "db.m5.large"
 dbname = "test" 
 dbpassword = "testing123testing123"
 dbuser = "admin"
+db_engine_version = "5.7.22"
 
 
 
