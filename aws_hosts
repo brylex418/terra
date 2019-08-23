@@ -1,6 +1,6 @@
   [dev]
-  18.237.3.4
+  34.210.78.235
   [dev:vars]
-  s3code=brylex-bglnvouszr
+  s3code=brylex-pnxzhgfsxz
   domain=abryant.io
   EOF

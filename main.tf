@@ -224,6 +224,14 @@ resource "aws_security_group" "wp_dev_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
 }
 
 resource "aws_security_group" "wp_public_sg" {
@@ -239,6 +247,13 @@ resource "aws_security_group" "wp_public_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
 }
 
 resource "aws_security_group" "wp_private_sg" {
@@ -254,6 +269,13 @@ resource "aws_security_group" "wp_private_sg" {
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr}"]
   }
+
+  egress {
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+}
 
 }
 
@@ -355,24 +377,30 @@ resource "aws_instance" "wp_dev" {
 
   tags = {
     Name = "wp_dev"
+    auto-delete = "no"
   }
 
   key_name = "${aws_key_pair.wp_auth.id}"
   vpc_security_group_ids = ["${aws_security_group.wp_dev_sg.id}"]
   iam_instance_profile = "${aws_iam_instance_profile.s3_access_profile.id}"
   subnet_id = "${aws_subnet.wp_public1_subnet.id}"
-  
-  provisioner "local-exec" {
-    command = <<EOD
-  cat <<EOF > aws_hosts
-  [dev]
-  ${aws_instance.wp_dev.public_ip}
-  [dev:vars]
-  s3code=${aws_s3_bucket.code.bucket}
-  domain=${var.domain_name}
-  EOF
-  EOD
+  user_data = "${data.template_file.user_data.rendered}"
+
+  data "template_file" "user_data" {
+    tempalte = "${file("templates/user_data.tpl")}"
   }
+
+  #provisioner "local-exec" {
+ #   command = <<EOD
+ # cat <<EOF > aws_hosts
+ # [dev]
+ # ${aws_instance.wp_dev.public_ip}
+ # [dev:vars]
+ # s3code=${aws_s3_bucket.code.bucket}
+ # domain=${var.domain_name}
+ # EOF
+ # EOD
+#  }
 
 # COMMENTING OUT UNTIL ANSIBLE IS SETUP
 #provisioner "local-exec" {
@@ -386,29 +414,51 @@ resource "aws_instance" "wp_dev" {
 #--------------NLB-----------------
 
 
+resource "aws_lb" "wp_lb" {
+  name               = "${var.lb_name}"
+  internal           = false
+  load_balancer_type = "network"
+  subnets            = ["${aws_subnet.wp_public1_subnet.id}",
+  "${aws_subnet.wp_public2_subnet.id}"
+  ]
 
+  enable_deletion_protection = false
 
+  tags = {
+    Use = "wp_terra_demo"
+    auto-delete = "no"
+  }
+}
 
+resource "aws_lb_listener" "wp_listener" {
+  load_balancer_arn = "${aws_lb.wp_lb.id}"
+  port              = "80"
+  protocol          = "TCP"
+  
+  default_action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.wp_target_group.id}"
+  }
+}
 
+resource "aws_lb_target_group" "wp_target_group" {
+  name     = "${var.lb_name}tg"
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = "${aws_vpc.wp_vpc.id}"
 
+health_check {
+  enabled  = "true"
+  interval = "10"
+  protocol = "TCP"
+  port     = "80"
+  healthy_threshold = "3"
+  unhealthy_threshold = "3"
+}
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+resource "aws_lb_target_group_attachment" "wp_attachment" {
+  target_group_arn = "${aws_lb_target_group.wp_target_group.id}"
+  target_id        = "${aws_instance.wp_dev.id}"
+  port             = "80"
+}
