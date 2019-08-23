@@ -47,7 +47,7 @@ resource "aws_iam_role" "s3_access_role" {
 EOF
 }
 
-#----------------- VPC ---------
+#----------------- VPC ---------------
 
 resource "aws_vpc" "wp_vpc" {
   cidr_block           = "${var.vpc_cidr}"
@@ -306,17 +306,34 @@ POLICY
 
 
 resource "random_id" "wp_code_bucket" {
-  byte_length = 6
+  byte_length = 3
 }
 
 resource "aws_s3_bucket" "code" {
+  bucket        = "${var.code_bucket_name}-${random_id.wp_code_bucket.id}"
   acl           = "private"
   force_destroy = true
 }
 
+resource "aws_s3_account_public_access_block" "example" {
+  block_public_acls   = true
+  block_public_policy = true
+}
 
+#--------------RDS-----------------
 
-
+resource "aws_db_instance" "wp_db" {
+  allocated_storage = 200
+  engine = "mysql"
+  engine_version = "5.6.27"
+  instance_class = "${var.db_instance_class}"
+  name = "${var.dbname}"
+  username = "${var.dbuser}"
+  password = "${var.dbpassword}"
+  db_subnet_group_name = "${aws_db_subnet_group.wp_rds_subnetgroup.name}"
+  vpc_security_group_ids = ["${aws_security_group.wp_rds_sg.id}"]
+  skip_final_snapshot = true  
+}
 
 
 

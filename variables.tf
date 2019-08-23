@@ -5,3 +5,4 @@ variable "vpc_cidr" {}
 variable "cidrs" {
   type = "map"
 }
+variable "code_bucket_name" {}
