@@ -384,30 +384,33 @@ resource "aws_instance" "wp_dev" {
   vpc_security_group_ids = ["${aws_security_group.wp_dev_sg.id}"]
   iam_instance_profile = "${aws_iam_instance_profile.s3_access_profile.id}"
   subnet_id = "${aws_subnet.wp_public1_subnet.id}"
-  user_data = "${data.template_file.user_data.rendered}"
+  user_data = <<-EOF
+   #!/bin/bash
+    sudo apt udpate -y
+    sudo apt install apache2 -y
+    echo "<h1>"Deployed Via Terraform"</h1>" | sudo tee /var/www/html/index.html
+    sudo systemctl start apache2
+    sudo systemctl enable apache2
+    EOF
 
-  data "template_file" "user_data" {
-    tempalte = "${file("templates/user_data.tpl")}"
-  }
-
-  #provisioner "local-exec" {
- #   command = <<EOD
- # cat <<EOF > aws_hosts
- # [dev]
- # ${aws_instance.wp_dev.public_ip}
- # [dev:vars]
- # s3code=${aws_s3_bucket.code.bucket}
- # domain=${var.domain_name}
- # EOF
- # EOD
-#  }
-
-# COMMENTING OUT UNTIL ANSIBLE IS SETUP
-#provisioner "local-exec" {
-# command = "aws ec2 wait instance-status-ok --instance-ids ${aws_instance.wp_dev.id} ansible-playbook -i aws_hosts wordpress.yml"
-}
-  
-#}
+//  provisioner "local-exec" {
+//     command = <<EOD
+//   cat <<EOF > aws_hosts
+//   [dev]
+//   ${aws_instance.wp_dev.public_ip}
+//   [dev:vars]
+//   s3code=${aws_s3_bucket.code.bucket}
+//   domain=${var.domain_name}
+//   EOF
+//   EOD
+//  }
+// 
+//  COMMENTING OUT UNTIL ANSIBLE IS SETUP
+// provisioner "local-exec" {
+//  command = "aws ec2 wait instance-status-ok --instance-ids ${aws_instance.wp_dev.id} ansible-playbook -i aws_hosts wordpress.yml"
+// 
+// 
+ }
 
 
 
