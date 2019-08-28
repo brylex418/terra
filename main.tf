@@ -414,6 +414,7 @@ resource "aws_instance" "wp_dev" {
 
 
 
+
 #--------------NLB-----------------
 
 
@@ -465,3 +466,4 @@ resource "aws_lb_target_group_attachment" "wp_attachment" {
   target_id        = "${aws_instance.wp_dev.id}"
   port             = "80"
 }
+
